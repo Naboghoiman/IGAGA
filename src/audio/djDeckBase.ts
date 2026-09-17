@@ -91,6 +91,26 @@ export class DjDeck {
     return this.track;
   }
 
+  /**
+   * Safe metadata setter for DiscDJ BPM & BeatGrid editor.
+   * Updates track analysis metadata WITHOUT interrupting audio transport,
+   * without seeking, without stopping, without reanchoring, and without
+   * changing active playbackRate.
+   */
+  public setTrackAnalysisMetadata(updatedTrack: TrackData): void {
+    if (!this.track) {
+      this.track = updatedTrack;
+      return;
+    }
+
+    this.track = {
+      ...this.track,
+      bpm: updatedTrack.bpm,
+      beatGrid: updatedTrack.beatGrid,
+      warpMap: updatedTrack.warpMap
+    };
+  }
+
   public getCurrentSourceSample(): number {
     this.updateCurrentPosition();
     return this.currentSourceSample;

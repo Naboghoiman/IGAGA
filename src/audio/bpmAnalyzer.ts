@@ -600,6 +600,80 @@ export function recalibrateTrackBeatGrid(
 }
 
 /**
+ * Pure metadata update function for the DiscDJ BPM & BeatGrid editor.
+ * Strictly calculates the straight beatGrid and DiscDjPhaseAnchor metadata
+ * WITHOUT ANY AUDIO SIDE EFFECTS.
+ */
+export function buildEditedTrackAnalysis(
+  track: TrackData,
+  editedBpm: number,
+  editedBeatStartSample: number,
+  editedFirstDownbeatSample?: number
+): TrackData {
+  const safeBpm = Math.max(40, Math.min(240, editedBpm));
+  const sampleRate = track.sampleRate;
+  const totalFrames = track.audioBuffer
+    ? track.audioBuffer.length
+    : Math.round(track.duration * sampleRate);
+
+  const beatPeriodSeconds = 60.0 / safeBpm;
+  const samplesPerBeat = sampleRate * beatPeriodSeconds;
+  const rawBeatPhaseSeconds = editedBeatStartSample / sampleRate;
+  const normalizedBeatStartSeconds =
+    ((rawBeatPhaseSeconds % beatPeriodSeconds) + beatPeriodSeconds) % beatPeriodSeconds;
+  const beatStartSample = Math.round(normalizedBeatStartSeconds * sampleRate);
+
+  const firstDownbeatSample =
+    editedFirstDownbeatSample ??
+    track.beatGrid.firstDownbeatSample ??
+    beatStartSample;
+
+  const discDjAnchor: DiscDjPhaseAnchor = {
+    analyzedBpm: safeBpm,
+    rawBeatPhaseSeconds,
+    beatPeriodSeconds,
+    normalizedBeatStartSeconds,
+    beatStartSample
+  };
+
+  const totalBeats = Math.max(
+    0,
+    Math.floor((totalFrames - beatStartSample) / samplesPerBeat)
+  );
+
+  const beatSamples: number[] = [];
+  const isDownbeat: boolean[] = [];
+  const fourBeatSpan = Math.round(samplesPerBeat * 4);
+
+  for (let b = 0; b < totalBeats; b++) {
+    const sample = Math.round(beatStartSample + b * samplesPerBeat);
+    beatSamples.push(sample);
+    const rel =
+      fourBeatSpan > 0
+        ? ((sample - firstDownbeatSample) % fourBeatSpan + fourBeatSpan) % fourBeatSpan
+        : 0;
+    isDownbeat.push(rel < samplesPerBeat * 0.4);
+  }
+
+  return {
+    ...track,
+    bpm: safeBpm,
+    beatGrid: {
+      ...track.beatGrid,
+      bpm: safeBpm,
+      samplesPerBeat,
+      beatStartSample,
+      discDjAnchor,
+      firstDownbeatSample,
+      totalBeats,
+      beatSamples,
+      isDownbeat,
+      gridType: 'STRAIGHT'
+    }
+  };
+}
+
+/**
  * Runs the MASAVU BeatGrid Refinement pipeline on a track's existing beatGrid.
  * Aligns vertical grid markers onto actual musical pulse before synchronization.
  */

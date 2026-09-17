@@ -711,14 +711,25 @@ export default function App() {
           track={calibratingDeck === 'A' ? trackA : trackB}
           deckId={calibratingDeck}
           currentPlaybackSample={calibratingDeck === 'A' ? telemetryA.currentSourceSample : telemetryB.currentSourceSample}
-          onUpdateTrack={(_d, updatedTrack) => {
+          onApplyTrackAnalysis={(deckId, updatedTrack) => {
             if (!controllerRef.current) return;
-            const isDeckA = calibratingDeck === 'A';
-            const deck = isDeckA ? controllerRef.current.deckA : controllerRef.current.deckB;
-            deck.loadTrack(updatedTrack);
-            if (isDeckA) setTrackA(updatedTrack);
-            else setTrackB(updatedTrack);
-            setCalibratingDeck(null);
+            const deck =
+              deckId === 'A'
+                ? controllerRef.current.deckA
+                : controllerRef.current.deckB;
+
+            deck.setTrackAnalysisMetadata(updatedTrack);
+
+            if (deckId === 'A') {
+              setTrackA(updatedTrack);
+            } else {
+              setTrackB(updatedTrack);
+            }
+
+            setSyncAlert({
+              message: `Deck ${deckId} BeatGrid & BPM updated (${updatedTrack.bpm.toFixed(3)} BPM). Live playback untouched.`,
+              type: 'success',
+            });
           }}
         />
       )}
