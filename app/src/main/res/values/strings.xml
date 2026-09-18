@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MASAVU DJ</string>
+    <string name="deck_a">DECK A</string>
+    <string name="deck_b">DECK B</string>
+    <string name="master">MASTER</string>
+    <string name="sync">SYNC</string>
+    <string name="cue">CUE</string>
+    <string name="play">PLAY</string>
+    <string name="pause">PAUSE</string>
+    <string name="looper">LOOPER</string>
+    <string name="mixer">MIXER</string>
+    <string name="master_rack">MASTER FX</string>
+    <string name="library">LIBRARY</string>
+    <string name="quantize">QUANTIZE</string>
+    <string name="vinyl_scratch">VINYL / SCRATCH</string>
+    <string name="performance_pads">PERFORMANCE PADS</string>
+</resources>
